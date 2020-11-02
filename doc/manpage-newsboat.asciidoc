@@ -14,7 +14,7 @@ newsboat - an RSS/Atom feed reader for text terminals
 
 == DESCRIPTION
 
-_newsboat_ is an RSS/Atom feed reader for text terminals. RSS and Atom are a
+_Newsboat_ is an RSS/Atom feed reader for text terminals. RSS and Atom are a
 number of widely-used XML formats to transmit, publish and syndicate articles, 
 for example news or blog articles.  Newsboat is designed to be used on text 
 terminals on Unix or Unix-like systems such as GNU/Linux, BSD or Mac OS X.
@@ -38,8 +38,17 @@ terminals on Unix or Unix-like systems such as GNU/Linux, BSD or Mac OS X.
         _delete-read-articles-on-quit_, _keep-articles-days_, and _max-items_
         settings.
 
+--cleanup::
+        Remove unreferenced entries from the cache and quit Newsboat. Feeds and
+        their articles will be removed if the feedurl is no longer in the
+        _urls_ file.
++
+Additionally, if the _delete-read-articles-on-quit_ configuration is set, all
+read articles will be deleted (including articles of feeds which are still in
+the _urls_ file).
+
 -v, -V, --version::
-        Get version information about newsboat and the libraries it uses
+        Get version information about Newsboat and the libraries it uses
 
 -i opmlfile, --import-from-opml=opmlfile::
        Import an OPML file
@@ -54,7 +63,7 @@ terminals on Unix or Unix-like systems such as GNU/Linux, BSD or Mac OS X.
        Use an alternative configuration file
 
 -x command ..., --execute=command...::
-       Execute one or more commands to run newsboat unattended. Currently available
+       Execute one or more commands to run Newsboat unattended. Currently available
        commands are "reload" and "print-unread".
 
 -l loglevel, --log-level=loglevel::
@@ -102,7 +111,7 @@ include::chapter-snownews.asciidoc[]
 include::chapter-cmdline.asciidoc[]
 
 _quit_::
-        Quit newsboat
+        Quit Newsboat
 _q_::
         Alias for _quit_
 

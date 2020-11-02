@@ -52,6 +52,10 @@ public:
 	{
 		return keys;
 	}
+	const KeyMap* get_keymap() const
+	{
+		return keys;
+	}
 	void set_tags(const std::vector<std::string>& t);
 	void push_empty_formaction();
 	void pop_current_formaction();
@@ -146,6 +150,7 @@ protected:
 	void cancel_input(std::shared_ptr<FormAction> fa);
 	void delete_word(std::shared_ptr<FormAction> fa);
 	bool handle_qna_event(const std::string& event, std::shared_ptr<FormAction> fa);
+	void handle_resize();
 
 	Controller* ctrl;
 

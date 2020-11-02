@@ -63,6 +63,7 @@ enum Operation {
 	OP_SETTAG,
 	OP_SEARCH,
 	OP_GOTO_URL,
+	OP_GOTO_TITLE,
 	OP_ENQUEUE,
 	OP_REDRAW,
 	OP_CMDLINE,
@@ -122,6 +123,7 @@ enum Operation {
 	OP_INT_BM_END,
 	OP_INT_EDITFLAGS_END,
 	OP_INT_START_SEARCH,
+	OP_INT_GOTO_TITLE,
 
 	OP_INT_GOTO_URL,
 
@@ -130,7 +132,6 @@ enum Operation {
 	OP_INT_QNA_NEXTHIST,
 	OP_INT_QNA_PREVHIST,
 
-	OP_INT_RESIZE,
 	OP_INT_SET,
 
 	OP_INT_MAX,
@@ -186,7 +187,7 @@ public:
 	std::vector<std::string> get_keys(Operation op, const std::string& context);
 	void handle_action(const std::string& action,
 		const std::string& params) override;
-	void dump_config(std::vector<std::string>& config_output) override;
+	void dump_config(std::vector<std::string>& config_output) const override;
 	std::vector<KeyMapDesc> get_keymap_descriptions(std::string context);
 
 	std::vector<MacroCmd> parse_operation_sequence(const std::string& line);
@@ -196,7 +197,7 @@ private:
 	bool is_valid_context(const std::string& context);
 	unsigned short get_flag_from_context(const std::string& context);
 	std::map<std::string, Operation> get_internal_operations() const;
-	std::string getopname(Operation op);
+	std::string getopname(Operation op) const;
 	std::map<std::string, std::map<std::string, Operation>> keymap_;
 	std::map<std::string, std::vector<MacroCmd>> macros_;
 	std::vector<MacroCmd> startup_operations_sequence;

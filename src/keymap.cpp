@@ -149,7 +149,7 @@ static const std::vector<OpDesc> opdescs = {
 		"help",
 		"?",
 		_("Open help dialog"),
-		KM_FEEDLIST | KM_ARTICLELIST | KM_ARTICLE | KM_PODBOAT
+		KM_FEEDLIST | KM_ARTICLELIST | KM_ARTICLE | KM_PODBOAT | KM_URLVIEW
 	},
 	{
 		OP_TOGGLESOURCEVIEW,
@@ -190,6 +190,7 @@ static const std::vector<OpDesc> opdescs = {
 		KM_FEEDLIST | KM_HELP | KM_ARTICLELIST | KM_ARTICLE
 	},
 	{OP_GOTO_URL, "goto-url", "#", _("Goto URL #"), KM_ARTICLE},
+	{OP_GOTO_TITLE, "goto-title", "", _("Goto item with title"), KM_FEEDLIST | KM_ARTICLELIST},
 	{OP_ENQUEUE, "enqueue", "e", _("Add download to queue"), KM_ARTICLE},
 	{
 		OP_RELOADURLS,
@@ -469,7 +470,6 @@ static const std::vector<OpDesc> opdescs = {
 		KM_INTERNAL
 	},
 
-	{OP_INT_RESIZE, "RESIZE", "internal-resize", "", KM_INTERNAL},
 	{OP_INT_SET, "set", "internal-set", "", KM_INTERNAL},
 
 	{OP_INT_GOTO_URL, "gotourl", "internal-goto-url", "", KM_INTERNAL},
@@ -632,11 +632,11 @@ Operation KeyMap::get_operation(const std::string& keycode,
 	return keymap_[context][key];
 }
 
-void KeyMap::dump_config(std::vector<std::string>& config_output)
+void KeyMap::dump_config(std::vector<std::string>& config_output) const
 {
 	for (const auto& ctx : contexts) {
 		const std::string& context = ctx.first;
-		std::map<std::string, Operation>& x = keymap_[context];
+		const auto& x = keymap_.at(context);
 		for (const auto& keymap : x) {
 			if (keymap.second < OP_INT_MIN) {
 				std::string configline = "bind-key ";
@@ -668,7 +668,7 @@ void KeyMap::dump_config(std::vector<std::string>& config_output)
 	}
 }
 
-std::string KeyMap::getopname(Operation op)
+std::string KeyMap::getopname(Operation op) const
 {
 	for (const auto& opdesc : opdescs) {
 		if (opdesc.op == op) {

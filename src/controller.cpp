@@ -386,6 +386,11 @@ int Controller::run(const CliArgsParser& args)
 					_("It looks like you haven't configured any "
 						"feeds in your Miniflux account. Please do "
 						"so, and try again."));
+		} else if (type == "ocnews") {
+			msg = strprintf::fmt(
+					_("It looks like you haven't configured any feeds in your "
+						"Owncloud/Nextcloud account. Please do so, and try "
+						"again."));
 		} else {
 			assert(0); // shouldn't happen
 		}
@@ -605,6 +610,15 @@ void Controller::mark_all_read(unsigned int pos)
 	}
 
 	if (feed->is_query_feed()) {
+		if (api) {
+			std::vector<std::string> item_guids;
+			for (const auto& item : feed->items()) {
+				if (item->unread()) {
+					item_guids.push_back(item->guid());
+				}
+			}
+			api->mark_articles_read(item_guids);
+		}
 		rsscache->mark_all_read(feed);
 	} else {
 		rsscache->mark_all_read(feed->rssurl());
@@ -781,10 +795,10 @@ void Controller::edit_urls_file()
 			editor,
 			utils::replace_all(configpaths.url_file(), "\"", "\\\""));
 
-	v->push_empty_formaction();
+	auto form_action = v->push_empty_formaction();
 	Stfl::reset();
-
 	utils::run_interactively(cmdline, "Controller::edit_urls_file");
+	v->drop_queued_input(form_action->get_form());
 
 	v->pop_current_formaction();
 

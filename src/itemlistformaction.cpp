@@ -804,7 +804,7 @@ void ItemListFormAction::finished_qna(Operation op)
 			std::ostringstream ostr;
 			v->get_ctrl()->write_item(
 				visible_items[itempos].first, ostr);
-			v->push_empty_formaction();
+			auto form_action = v->push_empty_formaction();
 			Stfl::reset();
 			FILE* f = popen(cmd.c_str(), "w");
 			if (f) {
@@ -812,6 +812,7 @@ void ItemListFormAction::finished_qna(Operation op)
 				fwrite(data.c_str(), data.length(), 1, f);
 				pclose(f);
 			}
+			v->drop_queued_input(form_action->get_form());
 			v->pop_current_formaction();
 		}
 	}
@@ -932,6 +933,46 @@ void ItemListFormAction::do_update_visible_items()
 	visible_items = new_visible_items;
 }
 
+void ItemListFormAction::draw_items()
+{
+	const unsigned int width = list.get_width();
+	auto datetime_format = cfg->get_configvalue("datetime-format");
+	auto itemlist_format =
+		cfg->get_configvalue("articlelist-format");
+
+	switch (invalidation_mode) {
+	case InvalidationMode::COMPLETE:
+		listfmt.clear();
+
+		for (const auto& item : visible_items) {
+			auto line = item2formatted_line(item,
+					width,
+					itemlist_format,
+					datetime_format);
+			listfmt.add_line(line);
+		}
+		break;
+
+	case InvalidationMode::PARTIAL:
+		for (const auto& itempos : invalidated_itempos) {
+			auto item = visible_items[itempos];
+			auto line = item2formatted_line(item,
+					width,
+					itemlist_format,
+					datetime_format);
+			listfmt.set_line(itempos, line);
+		}
+		break;
+	case InvalidationMode::NONE:
+		break;
+	}
+
+	list.stfl_replace_lines(listfmt);
+
+	invalidated_itempos.clear();
+	invalidation_mode = InvalidationMode::NONE;
+}
+
 void ItemListFormAction::prepare()
 {
 	std::lock_guard<std::mutex> mtx(redraw_mtx);
@@ -975,41 +1016,7 @@ void ItemListFormAction::prepare()
 		return;
 	}
 
-	auto datetime_format = cfg->get_configvalue("datetime-format");
-	auto itemlist_format =
-		cfg->get_configvalue("articlelist-format");
-
-	switch (invalidation_mode) {
-	case InvalidationMode::COMPLETE:
-		listfmt.clear();
-
-		for (const auto& item : visible_items) {
-			auto line = item2formatted_line(item,
-					width,
-					itemlist_format,
-					datetime_format);
-			listfmt.add_line(line);
-		}
-		break;
-
-	case InvalidationMode::PARTIAL:
-		for (const auto& itempos : invalidated_itempos) {
-			auto item = visible_items[itempos];
-			auto line = item2formatted_line(item,
-					width,
-					itemlist_format,
-					datetime_format);
-			listfmt.set_line(itempos, line);
-		}
-		break;
-	case InvalidationMode::NONE:
-		break;
-	}
-
-	list.stfl_replace_lines(listfmt);
-
-	invalidated_itempos.clear();
-	invalidation_mode = InvalidationMode::NONE;
+	draw_items();
 
 	set_head(feed->title(),
 		feed->unread_item_count(),
@@ -1091,15 +1098,16 @@ void ItemListFormAction::goto_item(const std::string& title)
 
 void ItemListFormAction::init()
 {
+	f.run(-3); // FRUN - compute all widget dimensions
 	list.set_position(0);
 	f.set("msg", "");
 	set_keymap_hints();
 	invalidate_everything();
 	do_update_visible_items();
+	draw_items();
 	if (cfg->get_configvalue_as_bool("goto-first-unread")) {
 		jump_to_next_unread_item(true);
 	}
-	f.run(-3); // FRUN - compute all widget dimensions
 }
 
 void ItemListFormAction::set_head(const std::string& s,
@@ -1552,8 +1560,7 @@ void ItemListFormAction::handle_op_saveall()
 				} else {
 					c = v->confirm(strprintf::fmt(
 								_("Overwrite `%s' in `%s'? "
-									"There are no more conflicts like this "
-									"(y:Yes a:Yes to all n:No q:No to all)"),
+									"(y:Yes n:No)"),
 								filename, directory),
 							input_options);
 				}
